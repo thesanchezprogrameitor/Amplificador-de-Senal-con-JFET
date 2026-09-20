@@ -56,7 +56,7 @@ scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 /* ===== Cámara y controles ===== */
 
 const camera =new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.05, 400);
-const HOME = { pos: new THREE.Vector3(0, 14.5, 20), target: new THREE.Vector3(0, -0.6, 0.4) };
+const HOME = { pos: new THREE.Vector3(0, 14.5, 18.4), target: new THREE.Vector3(0, -0.6, -1.2) };
 camera.position.copy(HOME.pos);
 
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -72,7 +72,7 @@ controls.zoomSpeed = 0.6;
 controls.rotateSpeed = 0.45;
 controls.panSpeed = 0.8;
 
-const LIM = { x: [-14, 14], y: [-1.5, 6], z: [-8, 10] };
+const LIM = { x: [-14, 14], y: [-1.5, 6], z: [-9, 9] };
 function clampTarget() {
   const t = controls.target;
   t.x = THREE.MathUtils.clamp(t.x, LIM.x[0], LIM.x[1]);
@@ -141,6 +141,8 @@ const ROWZ = {
 
 /* ===== Mesa ===== */
 
+const TABLE_Z = -1.6;
+
 function buildTable() {
   const wood = canvasTex(2048, 1024, (x, w, h) => {
     x.fillStyle = '#c8935b';
@@ -158,14 +160,14 @@ function buildTable() {
   });
   const g = new THREE.Group();
   const top = mesh(new THREE.BoxGeometry(28, 0.8, 16), std('#ffffff', 0.62, 0, { map: wood, bumpMap: wood, bumpScale: 0.035 }), false);
-  top.position.set(0, -0.4, 1);
+  top.position.set(0, -0.4, TABLE_Z);
   g.add(top);
 
   const legMat = std('#8d5f36', 0.6);
   for (const sx of [-1, 1]) {
     for (const sz of [-1, 1]) {
       const leg = mesh(new THREE.BoxGeometry(0.9, 12, 0.9), legMat);
-      leg.position.set(sx * 12.8, -6.8, 1 + sz * 6.8);
+      leg.position.set(sx * 12.8, -6.8, TABLE_Z + sz * 6.8);
       g.add(leg);
     }
   }
@@ -182,7 +184,7 @@ function buildTable() {
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(44, 28),
     new THREE.MeshBasicMaterial({ map: radial(0.04, 0.18, 0.08), transparent: true, depthWrite: false }));
   floor.rotation.x = -Math.PI / 2;
-  floor.position.set(0, -12.8, 1);
+  floor.position.set(0, -12.8, TABLE_Z);
   g.add(floor);
 
   const contact = new THREE.Mesh(new THREE.PlaneGeometry(19, 7.5),
