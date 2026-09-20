@@ -56,7 +56,7 @@ scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 /* ===== Cámara y controles ===== */
 
 const camera =new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.05, 400);
-const HOME = { pos: new THREE.Vector3(0, 14.5, 18.4), target: new THREE.Vector3(0, -0.6, -1.2) };
+const HOME = { pos: new THREE.Vector3(0, 16.5, 20.5), target: new THREE.Vector3(0, -0.6, 0) };
 camera.position.copy(HOME.pos);
 
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -72,7 +72,7 @@ controls.zoomSpeed = 0.6;
 controls.rotateSpeed = 0.45;
 controls.panSpeed = 0.8;
 
-const LIM = { x: [-14, 14], y: [-1.5, 6], z: [-9, 9] };
+const LIM = { x: [-16, 16], y: [-1.5, 6], z: [-10, 10] };
 function clampTarget() {
   const t = controls.target;
   t.x = THREE.MathUtils.clamp(t.x, LIM.x[0], LIM.x[1]);
@@ -87,7 +87,7 @@ const sun = new THREE.DirectionalLight('#fff4e6', 2.0);
 sun.position.set(6.6, 21, 14.4);
 sun.castShadow = true;
 sun.shadow.mapSize.set(4096, 4096);
-Object.assign(sun.shadow.camera, { left: -22, right: 22, top: 16, bottom: -16, near: 1, far: 90 });
+Object.assign(sun.shadow.camera, { left: -24, right: 24, top: 18, bottom: -18, near: 1, far: 90 });
 sun.shadow.camera.updateProjectionMatrix();
 sun.shadow.bias = -0.0004;
 sun.shadow.normalBias = 0.02;
@@ -141,7 +141,8 @@ const ROWZ = {
 
 /* ===== Mesa ===== */
 
-const TABLE_Z = -2.8;
+const TABLE_W = 32;
+const TABLE_D = 20;
 
 function buildTable() {
   const wood = canvasTex(2048, 1024, (x, w, h) => {
@@ -159,15 +160,15 @@ function buildTable() {
     }
   });
   const g = new THREE.Group();
-  const top = mesh(new THREE.BoxGeometry(28, 0.8, 16), std('#ffffff', 0.62, 0, { map: wood, bumpMap: wood, bumpScale: 0.035 }), false);
-  top.position.set(0, -0.4, TABLE_Z);
+  const top = mesh(new THREE.BoxGeometry(TABLE_W, 0.8, TABLE_D), std('#ffffff', 0.62, 0, { map: wood, bumpMap: wood, bumpScale: 0.035 }), false);
+  top.position.set(0, -0.4, 0);
   g.add(top);
 
   const legMat = std('#8d5f36', 0.6);
   for (const sx of [-1, 1]) {
     for (const sz of [-1, 1]) {
       const leg = mesh(new THREE.BoxGeometry(0.9, 12, 0.9), legMat);
-      leg.position.set(sx * 12.8, -6.8, TABLE_Z + sz * 6.8);
+      leg.position.set(sx * (TABLE_W / 2 - 1.2), -6.8, sz * (TABLE_D / 2 - 1.2));
       g.add(leg);
     }
   }
@@ -181,10 +182,10 @@ function buildTable() {
     x.fillRect(0, 0, w, h);
   });
 
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(44, 28),
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(TABLE_W + 18, TABLE_D + 14),
     new THREE.MeshBasicMaterial({ map: radial(0.04, 0.18, 0.08), transparent: true, depthWrite: false }));
   floor.rotation.x = -Math.PI / 2;
-  floor.position.set(0, -12.8, TABLE_Z);
+  floor.position.set(0, -12.8, 0);
   g.add(floor);
 
   const contact = new THREE.Mesh(new THREE.PlaneGeometry(19, 7.5),
