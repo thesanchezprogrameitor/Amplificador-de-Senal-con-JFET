@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'unsafe-inline'; img-src data: blob:; connect-src https://cdn.jsdelivr.net; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="referrer" content="no-referrer">
-<title>Laboratorio 2 · 3D</title>
+<title>Laboratorio 2 · Amplificador de señal con JFET</title>
 <style>
   [hidden]{display:none!important}
   html,body{margin:0;height:100%;background:#fff;overflow:hidden;font:14px/1.45 "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif}
@@ -35,6 +35,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
+/* ===== Renderer y escena ===== */
+
 const PIX_MAX = Math.min(devicePixelRatio, 2);
 const PIX_MIN = 1.25;
 
@@ -51,7 +53,9 @@ scene.background = new THREE.Color('#ffffff');
 const pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 
-const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.05, 400);
+/* ===== Cámara y controles ===== */
+
+const camera =new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.05, 400);
 const HOME = { pos: new THREE.Vector3(0, 14.5, 20), target: new THREE.Vector3(0, -0.6, 0.4) };
 camera.position.copy(HOME.pos);
 
@@ -76,6 +80,8 @@ function clampTarget() {
   t.z = THREE.MathUtils.clamp(t.z, LIM.z[0], LIM.z[1]);
 }
 
+/* ===== Luces ===== */
+
 scene.add(new THREE.HemisphereLight('#ffffff', '#e9dcc8', 0.53));
 const sun = new THREE.DirectionalLight('#fff4e6', 2.0);
 sun.position.set(6.6, 21, 14.4);
@@ -92,6 +98,8 @@ scene.add(sun);
 const fill = new THREE.DirectionalLight('#dfe8ff', 0.42);
 fill.position.set(-16, 9, -8);
 scene.add(fill);
+
+/* ===== Utilidades ===== */
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const std = (color, roughness = 0.5, metalness = 0, extra = {}) =>
@@ -121,6 +129,8 @@ function decal(tex, w, h) {
   return m;
 }
 
+/* ===== Coordenadas de la protoboard ===== */
+
 const P = 0.254;
 const BOARD_TOP = 0.85;
 const colX = c => (c - 32) * P;
@@ -128,6 +138,8 @@ const ROWZ = {
   a: 1.416, b: 1.162, c: 0.908, d: 0.654, e: 0.4, f: -0.4, g: -0.654, h: -0.908, i: -1.162, j: -1.416,
   'B-': 2.0, 'B+': 2.254, 'T+': -2.0, 'T-': -2.254,
 };
+
+/* ===== Mesa ===== */
 
 function buildTable() {
   const wood = canvasTex(2048, 1024, (x, w, h) => {
@@ -181,6 +193,8 @@ function buildTable() {
   g.add(contact);
   return g;
 }
+
+/* ===== Protoboard ===== */
 
 function buildBoard() {
   const g = new THREE.Group();
@@ -276,8 +290,12 @@ function buildBoard() {
   return g;
 }
 
+/* ===== Montaje ===== */
+
 scene.add(buildTable());
 scene.add(buildBoard());
+
+/* ===== Navegación ===== */
 
 const sphA = new THREE.Spherical(), sphB = new THREE.Spherical(), sphC = new THREE.Spherical();
 const tmpOff = new THREE.Vector3();
@@ -327,6 +345,8 @@ addEventListener('resize', () => {
   needsRender = true;
 });
 
+/* ===== Rendimiento ===== */
+
 let pixR = PIX_MAX, frameAcc = 0, frameN = 0;
 function adaptResolution(dt) {
   if (dt < 0.06 && document.visibilityState === 'visible') {
@@ -345,6 +365,8 @@ function adaptResolution(dt) {
     renderer.setPixelRatio(pixR);
   }
 }
+
+/* ===== Bucle principal ===== */
 
 const clock = new THREE.Clock();
 function animate() {
