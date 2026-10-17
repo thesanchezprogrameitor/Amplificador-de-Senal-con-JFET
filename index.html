@@ -1338,11 +1338,15 @@ addPart({ id: 'scope', tag: 'Medición', name: 'Osciloscopio',
 addPart({ id: 'c1', tag: 'Entrada', name: 'C1 · Capacitor 10 µF', explode: 2.9,
   desc: 'Deja pasar la señal y bloquea la corriente continua.',
   tip: 'La franja con signos − marca la pata negativa.' },
-  buildElectrolytic('10µF', holePos(3, 'b'), holePos(6, 'b')));
+  buildElectrolytic('10µF', holePos(3, 'b'), holePos(7, 'b')));
 
 addPart({ id: 'w-in', tag: 'Entrada', name: 'Cable de señal',
   desc: 'Pasa la señal al otro lado de la protoboard.' },
-  buildJumper(6, 'e', 6, 'f', 'red'));
+  buildJumper(7, 'e', 7, 'f', 'red'));
+
+addPart({ id: 'r1', tag: 'Polarización', name: 'R1 · Resistencia 1 MΩ', explode: 2.3,
+  desc: 'Une la entrada con tierra para que el JFET trabaje estable.' },
+  buildResistorLaid(1e6, holePos(7, 'i'), holePos(7, 'B-')));
 
 /* ===== Pantalla del osciloscopio ===== */
 
