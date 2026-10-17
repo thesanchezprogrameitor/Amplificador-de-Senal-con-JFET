@@ -580,15 +580,23 @@ function buildResistorBent(ohms, a, b, z = a.z) {
   return g;
 }
 
-function buildCeramic(code, a, b, z = a.z) {
+function buildCeramic(code, a, b) {
   const g = new THREE.Group();
   const R = 0.19, T = 0.048;
-  const PITCH = Math.abs(b.x - a.x) <= P + 1e-6 ? Math.abs(b.x - a.x) : 0.2;
-  const cx = (a.x + b.x) / 2;
+  const d = V(b.x - a.x, 0, b.z - a.z);
+  const span = d.length();
+  d.normalize();
+  const PITCH = span <= P + 1e-6 ? span : 0.2;
+  const c = V((a.x + b.x) / 2, 0, (a.z + b.z) / 2);
   const cy = BOARD_TOP + 0.4 + R;
   const kneeY = BOARD_TOP + 0.28;
   const bottomY = BOARD_TOP - 0.1;
   const coat = std('#c8742c', 0.55, 0);
+
+  const head = new THREE.Group();
+  head.position.set(c.x, cy, c.z);
+  head.rotation.y = -Math.atan2(d.z, d.x);
+  g.add(head);
 
   const profile = [new THREE.Vector2(0.0005, T)];
   for (let i = 0; i <= 16; i++) {
@@ -598,9 +606,7 @@ function buildCeramic(code, a, b, z = a.z) {
   profile.push(new THREE.Vector2(0.0005, -T));
   const discGeo = new THREE.LatheGeometry(profile, 56);
   discGeo.rotateX(Math.PI / 2);
-  const disc = mesh(discGeo, coat);
-  disc.position.set(cx, cy, z);
-  g.add(disc);
+  head.add(mesh(discGeo, coat));
 
   const tex = canvasTex(256, 128, (x, w, h) => {
     x.clearRect(0, 0, w, h);
@@ -612,18 +618,17 @@ function buildCeramic(code, a, b, z = a.z) {
   });
   for (const side of [1, -1]) {
     const label = decal(tex, 0.21, 0.105);
-    label.position.set(cx, cy + 0.015, z + side * (T + 0.002));
+    label.position.set(0, 0.015, side * (T + 0.002));
     if (side < 0) label.rotation.y = Math.PI;
-    g.add(label);
+    head.add(label);
   }
 
-  for (const p of [a, b]) {
-    const s = Math.sign(p.x - cx) || 1;
-    const top = V(cx + s * PITCH / 2, cy - R + 0.06, z);
+  for (const [p, s] of [[a, -1], [b, 1]]) {
+    const top = c.clone().addScaledVector(d, s * PITCH / 2).setY(cy - R + 0.06);
     const drip = mesh(new THREE.CylinderGeometry(0.03, 0.025, 0.09, 16), coat);
-    drip.position.set(top.x, cy - R + 0.015, z);
+    drip.position.copy(top).setY(cy - R + 0.015);
     g.add(drip);
-    const pts = [top, V(top.x, kneeY, z), V(top.x, kneeY, p.z), V(p.x, kneeY, p.z), V(p.x, bottomY, p.z)]
+    const pts = [top, V(top.x, kneeY, top.z), V(p.x, kneeY, p.z), V(p.x, bottomY, p.z)]
       .filter((q, i, arr) => i === 0 || q.distanceTo(arr[i - 1]) > 1e-6);
     g.add(mesh(new THREE.TubeGeometry(roundedPath(pts, 0.06), 160, RES.WIRE, 16, false), LEG_METAL, true, false));
   }
@@ -1460,7 +1465,7 @@ addPart({ id: 'scope', tag: 'Medición', name: 'Osciloscopio',
 addPart({ id: 'c1', tag: 'Entrada', name: 'C1 · Capacitor 10 µF', explode: 2.9,
   desc: 'Deja pasar la señal y bloquea la corriente continua.',
   tip: 'La franja con signos − marca la pata negativa.' },
-  buildElectrolytic('10µF', holePos(3, 'b'), holePos(7, 'b')));
+  buildElectrolytic('10µF', holePos(7, 'b'), holePos(3, 'b')));
 
 addPart({ id: 'w-in', tag: 'Entrada', name: 'Cable de señal',
   desc: 'Pasa la señal al otro lado de la protoboard.' },
@@ -1481,7 +1486,7 @@ addPart({ id: 'rv1', tag: 'Ajuste', name: 'RV1 · Potenciómetro 1 kΩ', explode
 
 addPart({ id: 'w-pot', tag: 'Ajuste', name: 'Puente del potenciómetro',
   desc: 'Une la pata del centro con una lateral.' },
-  buildJumper(16, 'h', 17, 'h', 'red'));
+  buildJumper(16, 'g', 17, 'g', 'red'));
 
 addPart({ id: 'q1', tag: 'Amplificador', name: 'Q1 · JFET 2N3819', explode: 2.4,
   desc: 'Es el transistor que amplifica la señal.',
@@ -1491,6 +1496,19 @@ addPart({ id: 'q1', tag: 'Amplificador', name: 'Q1 · JFET 2N3819', explode: 2.4
 addPart({ id: 'w-src', tag: 'Amplificador', name: 'Cable al potenciómetro',
   desc: 'Une la pata izquierda del JFET con el potenciómetro.' },
   buildJumper(16, 'f', 16, 'e', 'red'));
+
+addPart({ id: 'w-gate', tag: 'Entrada', name: 'Cable a la compuerta',
+  desc: 'Lleva la señal del capacitor a la compuerta del JFET.' },
+  buildJumper(7, 'd', 17, 'd', 'orange'));
+
+addPart({ id: 'w-drain', tag: 'Salida', name: 'Cable del drenador',
+  desc: 'Saca la señal amplificada de la pata derecha del JFET.' },
+  buildJumper(18, 'e', 23, 'h', 'red', 0.11, [V(colX(18), 0, ROWZ.h)]));
+
+addPart({ id: 'c2', tag: 'Salida', name: 'C2 · Capacitor 0,1 µF', explode: 2.9,
+  desc: 'Capacitor cerámico (código 104) entre la salida y tierra.',
+  tip: 'No tiene polaridad: se puede poner en cualquier sentido.' },
+  buildCeramic('104', holePos(23, 'i'), holePos(23, 'B-')));
 
 /* ===== Pantalla del osciloscopio ===== */
 
