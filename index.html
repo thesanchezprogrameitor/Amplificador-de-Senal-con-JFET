@@ -630,6 +630,86 @@ function buildCeramic(code, a, b, z = a.z) {
   return g;
 }
 
+function buildPot(label, first, row) {
+  const g = new THREE.Group();
+  const R = 0.39, CAN = 0.26;
+  const zp = ROWZ[row];
+  const xc = colX(first + 1);
+  const yc = BOARD_TOP + 0.16 + R;
+  const bottomY = BOARD_TOP - 0.1;
+  const metal = std('#e3e6ea', 0.32, 0.55);
+  const dark = std('#2b2622', 0.7, 0);
+
+  const back = mesh(new THREE.CylinderGeometry(R - 0.02, R - 0.02, 0.06, 48), dark);
+  back.rotation.x = Math.PI / 2;
+  back.position.set(xc, yc, zp - 0.03);
+  g.add(back);
+
+  const can = mesh(new THREE.CylinderGeometry(R, R, CAN, 56), metal);
+  can.rotation.x = Math.PI / 2;
+  can.position.set(xc, yc, zp + CAN / 2);
+  g.add(can);
+  const rim = mesh(new THREE.TorusGeometry(R - 0.012, 0.014, 10, 56), metal);
+  rim.position.set(xc, yc, zp + CAN);
+  g.add(rim);
+
+  const tex = canvasTex(256, 96, (x, w, h) => {
+    x.clearRect(0, 0, w, h);
+    x.fillStyle = '#4a4f57';
+    x.font = '700 60px Arial';
+    x.textAlign = 'center';
+    x.textBaseline = 'middle';
+    x.fillText(label, w / 2, h / 2);
+  });
+  const mark = decal(tex, 0.22, 0.0825);
+  mark.position.set(xc, yc - R * 0.7, zp + CAN + 0.002);
+  g.add(mark);
+
+  const bush = mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.2, 32), std('#b8bdc4', 0.35, 0.9));
+  bush.rotation.x = Math.PI / 2;
+  bush.position.set(xc, yc, zp + CAN + 0.1);
+  g.add(bush);
+  const nut = mesh(new THREE.CylinderGeometry(0.21, 0.21, 0.06, 6), metal);
+  nut.rotation.x = Math.PI / 2;
+  nut.position.set(xc, yc, zp + CAN + 0.04);
+  g.add(nut);
+
+  const knob = new THREE.Group();
+  knob.position.set(xc, yc, zp + CAN + 0.2);
+  const KR = 0.085, KL = 0.42;
+  const shaft = mesh(new THREE.CylinderGeometry(KR, KR, KL, 32), std('#d7dadf', 0.3, 0.95));
+  shaft.rotation.x = Math.PI / 2;
+  shaft.position.z = KL / 2;
+  knob.add(shaft);
+  const ridges = [];
+  for (let i = 0; i < 18; i++) {
+    const a = (i / 18) * Math.PI * 2;
+    const r = new THREE.BoxGeometry(0.018, 0.018, KL * 0.62);
+    r.translate(Math.cos(a) * KR, Math.sin(a) * KR, KL * 0.62);
+    ridges.push(r);
+  }
+  knob.add(mesh(mergeGeometries(ridges), std('#a9aeb5', 0.45, 0.9)));
+  const slot = mesh(new THREE.BoxGeometry(0.02, KR * 2.02, 0.03), std('#55595f', 0.6, 0.6), false);
+  slot.position.z = KL - 0.01;
+  knob.add(slot);
+  g.add(knob);
+  g.userData.knob = knob;
+
+  const lugs = [];
+  for (let i = 0; i < 3; i++) {
+    const px = colX(first + i);
+    const topY = yc - Math.sqrt(R * R - (px - xc) ** 2) + 0.08;
+    const lug = new THREE.BoxGeometry(0.07, topY - BOARD_TOP - 0.06, 0.02);
+    lug.translate(px, (topY + BOARD_TOP + 0.06) / 2, zp);
+    lugs.push(lug);
+    const pin = new THREE.BoxGeometry(0.035, BOARD_TOP + 0.08 - bottomY, 0.02);
+    pin.translate(px, (BOARD_TOP + 0.08 + bottomY) / 2, zp);
+    lugs.push(pin);
+  }
+  g.add(mesh(mergeGeometries(lugs), std('#c9ccd0', 0.35, 0.85)));
+  return g;
+}
+
 function buildElectrolytic(value, minus, plus) {
   const g = new THREE.Group();
   const R = 0.2, H = 0.7, PITCH = 0.2;
@@ -1347,6 +1427,15 @@ addPart({ id: 'w-in', tag: 'Entrada', name: 'Cable de señal',
 addPart({ id: 'r1', tag: 'Polarización', name: 'R1 · Resistencia 1 MΩ', explode: 2.3,
   desc: 'Une la entrada con tierra para que el JFET trabaje estable.' },
   buildResistorLaid(1e6, holePos(7, 'i'), holePos(7, 'B-')));
+
+addPart({ id: 'w-gnd15', tag: 'Tierra', name: 'Cable a tierra',
+  desc: 'Conecta la primera pata del potenciómetro a tierra.' },
+  buildJumper(15, 'j', 15, 'B-', 'black'));
+
+addPart({ id: 'rv1', tag: 'Ajuste', name: 'RV1 · Potenciómetro 1 kΩ', explode: 2.6,
+  desc: 'Resistencia que se ajusta girando el eje.',
+  tip: 'El eje queda hacia afuera para poder girarlo.' },
+  buildPot('B1K', 15, 'i'));
 
 /* ===== Pantalla del osciloscopio ===== */
 
