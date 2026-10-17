@@ -761,9 +761,10 @@ function buildElectrolytic(value, minus, plus) {
   const g = new THREE.Group();
   const R = 0.2, H = 0.7, PITCH = 0.2;
   const bodyBottom = BOARD_TOP + 0.44;
-  const kneeY = BOARD_TOP + 0.34;
   const bottomY = BOARD_TOP - 0.1;
-  const d = V(plus.x - minus.x, 0, plus.z - minus.z).normalize();
+  const d = V(plus.x - minus.x, 0, plus.z - minus.z);
+  const kneeY = BOARD_TOP + (d.length() > 5 * P ? 0.06 : 0.34);
+  d.normalize();
   const c = V((minus.x + plus.x) / 2, 0, (minus.z + plus.z) / 2);
 
   const S = 420;
@@ -1491,7 +1492,7 @@ addPart({ id: 'w-pot', tag: 'Ajuste', name: 'Puente del potenciómetro',
 addPart({ id: 'q1', tag: 'Amplificador', name: 'Q1 · JFET 2N3819', explode: 2.4,
   desc: 'Es el transistor que amplifica la señal.',
   tip: 'La pata del centro es la compuerta.' },
-  buildTO92(['2N', '3819'], 16, 'c'));
+  buildTO92(['2N', '3819'], 16, 'b'));
 
 addPart({ id: 'w-src', tag: 'Amplificador', name: 'Cable al potenciómetro',
   desc: 'Une la pata izquierda del JFET con el potenciómetro.' },
@@ -1513,6 +1514,19 @@ addPart({ id: 'c2', tag: 'Amplificador', name: 'C2 · Capacitor 0,1 µF', explod
 addPart({ id: 'r2', tag: 'Amplificador', name: 'R2 · Resistencia 3,3 kΩ', explode: 2.3,
   desc: 'Va de tierra a la columna 27.' },
   buildResistorLaid(3300, holePos(27, 'd'), holePos(27, 'B-')));
+
+addPart({ id: 'c3', tag: 'Salida', name: 'C3 · Capacitor 10 µF', explode: 2.9,
+  desc: 'Deja pasar la señal amplificada y bloquea la corriente continua.',
+  tip: 'La franja con signos − marca la pata negativa.' },
+  buildElectrolytic('10µF', holePos(27, 'c'), holePos(18, 'c')));
+
+addPart({ id: 'r3', tag: 'Amplificador', name: 'R3 · Resistencia 4,7 kΩ', explode: 2.3,
+  desc: 'Alimenta el JFET desde los 20 V.' },
+  buildResistorToRail(4700, 18, 'a', 'T-', 19));
+
+addPart({ id: 'w-vdd', tag: 'Alimentación', name: 'Puente de +20 V',
+  desc: 'Lleva los 20 V del riel de abajo al de arriba.' },
+  buildJumper(63, 'B+', 63, 'T-', 'red', 0.15));
 
 /* ===== Pantalla del osciloscopio ===== */
 
