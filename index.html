@@ -377,7 +377,6 @@ function buildBoard() {
     const labelX = -8.36;
     x.font = `700 ${0.14 * S}px Arial`;
     x.fillStyle = RD;
-    x.fillText('+20 V', ...toC(labelX, ROWZ['B+']));
     x.fillText('+20 V', ...toC(labelX, ROWZ['T-']));
 
     const groundSymbol = (px, pz) => {
@@ -1449,14 +1448,17 @@ addPart({ id: 'supply', tag: 'Alimentación', name: 'Fuente DC de 20 V',
   desc: 'Alimenta el circuito con 20 V.',
   tip: 'Arranca apagada: préndela con el botón OFF.' },
   supply,
-  buildLead(posts['-'], 3, 'B-', 'black', -3.8, [[-12.35, -3.8], [-12.35, 3.3], [colX(3), 3.3]]),
-  buildLead(posts['+'], 4, 'B+', 'red', -4.02, [[-12.6, -4.02], [-12.6, 3.55], [colX(4), 3.55]]));
+  buildLead(posts['+'], 1, 'T-', 'red', -3.3, [[colX(1), -3.3]]),
+  buildLead(posts['-'], 2, 'T+', 'black', -3.55, [[colX(2), -3.55]]));
 
 const generator = buildFunctionGenerator();
+const gen = generator.userData.posts;
 addPart({ id: 'generator', tag: 'Señal', name: 'Generador de funciones',
   desc: 'Entrega la señal pequeña que el circuito va a amplificar.',
   tip: 'Con sus botones eliges la frecuencia.' },
-  generator);
+  generator,
+  buildLead(gen.sig, 3, 'a', 'signal', -3.6, [[colX(3), -3.6]]),
+  buildLead(gen.gnd, 11, 'T+', 'green', -3.6, []));
 
 const scope = buildOscilloscope();
 addPart({ id: 'scope', tag: 'Medición', name: 'Osciloscopio',
@@ -1464,7 +1466,7 @@ addPart({ id: 'scope', tag: 'Medición', name: 'Osciloscopio',
   scope);
 
 addPart({ id: 'c1', tag: 'Entrada', name: 'C1 · Capacitor 10 µF', explode: 2.9,
-  desc: 'Deja pasar la señal y bloquea la corriente continua.',
+  desc: 'Deja pasar la señal del generador y bloquea la corriente continua.',
   tip: 'La franja con signos − marca la pata negativa.' },
   buildElectrolytic('10µF', holePos(7, 'b'), holePos(3, 'b')));
 
@@ -1472,16 +1474,16 @@ addPart({ id: 'w-in', tag: 'Entrada', name: 'Cable de señal',
   desc: 'Pasa la señal al otro lado de la protoboard.' },
   buildJumper(7, 'e', 7, 'f', 'red'));
 
-addPart({ id: 'r1', tag: 'Polarización', name: 'R1 · Resistencia 1 MΩ', explode: 2.3,
-  desc: 'Une la entrada con tierra para que el JFET trabaje estable.' },
+addPart({ id: 'rg', tag: 'Polarización', name: 'RG · Resistencia 1 MΩ', explode: 2.3,
+  desc: 'Une la compuerta con tierra para que el JFET trabaje estable.' },
   buildResistorLaid(1e6, holePos(7, 'i'), holePos(7, 'B-')));
 
 addPart({ id: 'w-gnd15', tag: 'Tierra', name: 'Cable a tierra',
-  desc: 'Conecta la primera pata del potenciómetro a tierra.' },
+  desc: 'Conecta una pata del potenciómetro a tierra.' },
   buildJumper(15, 'j', 15, 'B-', 'black'));
 
-addPart({ id: 'rv1', tag: 'Ajuste', name: 'RV1 · Potenciómetro 1 kΩ', explode: 2.6,
-  desc: 'Resistencia que se ajusta girando el eje.',
+addPart({ id: 'rs', tag: 'Ajuste', name: 'RS · Potenciómetro 1 kΩ', explode: 2.6,
+  desc: 'Resistencia de la fuente del JFET. Al girarlo cambia cuánto amplifica.',
   tip: 'El eje queda hacia afuera para poder girarlo.' },
   buildPot('B1K', 15, 'i'));
 
@@ -1491,42 +1493,42 @@ addPart({ id: 'w-pot', tag: 'Ajuste', name: 'Puente del potenciómetro',
 
 addPart({ id: 'q1', tag: 'Amplificador', name: 'Q1 · JFET 2N3819', explode: 2.4,
   desc: 'Es el transistor que amplifica la señal.',
-  tip: 'La pata del centro es la compuerta.' },
+  tip: 'Izquierda: fuente. Centro: compuerta. Derecha: drenador.' },
   buildTO92(['2N', '3819'], 16, 'b'));
 
 addPart({ id: 'w-src', tag: 'Amplificador', name: 'Cable al potenciómetro',
-  desc: 'Une la pata izquierda del JFET con el potenciómetro.' },
+  desc: 'Une la fuente del JFET con el potenciómetro.' },
   buildJumper(16, 'f', 16, 'e', 'red'));
 
 addPart({ id: 'w-gate', tag: 'Entrada', name: 'Cable a la compuerta',
   desc: 'Lleva la señal del capacitor a la compuerta del JFET.' },
-  buildJumper(7, 'd', 17, 'd', 'orange'));
+  buildJumper(7, 'd', 17, 'd', 'red'));
 
 addPart({ id: 'w-bypass', tag: 'Amplificador', name: 'Cable al capacitor',
   desc: 'Une el potenciómetro con el capacitor cerámico.' },
   buildJumper(17, 'h', 23, 'h', 'red'));
 
-addPart({ id: 'c2', tag: 'Amplificador', name: 'C2 · Capacitor 0,1 µF', explode: 2.9,
-  desc: 'Capacitor cerámico (código 104) entre el potenciómetro y tierra.',
+addPart({ id: 'c3', tag: 'Amplificador', name: 'C3 · Capacitor 100 nF', explode: 2.9,
+  desc: 'Capacitor cerámico (código 104) en paralelo con el potenciómetro. Ayuda a que el circuito amplifique más.',
   tip: 'No tiene polaridad: se puede poner en cualquier sentido.' },
   buildCeramic('104', holePos(23, 'i'), holePos(23, 'B-')));
 
-addPart({ id: 'r2', tag: 'Amplificador', name: 'R2 · Resistencia 3,3 kΩ', explode: 2.3,
-  desc: 'Va de tierra a la columna 27.' },
+addPart({ id: 'rl', tag: 'Salida', name: 'RL · Resistencia 3,3 kΩ', explode: 2.3,
+  desc: 'Es la carga del amplificador: aquí se mide la señal de salida.' },
   buildResistorLaid(3300, holePos(27, 'd'), holePos(27, 'B-')));
 
-addPart({ id: 'c3', tag: 'Salida', name: 'C3 · Capacitor 10 µF', explode: 2.9,
+addPart({ id: 'c2', tag: 'Salida', name: 'C2 · Capacitor 10 µF', explode: 2.9,
   desc: 'Deja pasar la señal amplificada y bloquea la corriente continua.',
   tip: 'La franja con signos − marca la pata negativa.' },
   buildElectrolytic('10µF', holePos(27, 'c'), holePos(18, 'c')));
 
-addPart({ id: 'r3', tag: 'Amplificador', name: 'R3 · Resistencia 4,7 kΩ', explode: 2.3,
-  desc: 'Alimenta el JFET desde los 20 V.' },
+addPart({ id: 'rd', tag: 'Amplificador', name: 'RD · Resistencia 4,7 kΩ', explode: 2.3,
+  desc: 'Alimenta el drenador del JFET desde los 20 V.' },
   buildResistorToRail(4700, 18, 'a', 'T-', 19));
 
-addPart({ id: 'w-vdd', tag: 'Alimentación', name: 'Puente de +20 V',
-  desc: 'Lleva los 20 V del riel de abajo al de arriba.' },
-  buildJumper(63, 'B+', 63, 'T-', 'red', 0.15));
+addPart({ id: 'w-gnd', tag: 'Tierra', name: 'Puente de tierra',
+  desc: 'Une las dos tierras de la protoboard.' },
+  buildJumper(31, 'B-', 31, 'T+', 'black'));
 
 /* ===== Pantalla del osciloscopio ===== */
 
@@ -1534,14 +1536,48 @@ const COLOR_IN = '#f5d742', COLOR_OUT = '#3fa9ff';
 
 const TDIV = { 100: 2e-3, 1000: 0.2e-3, 10000: 20e-6 };
 
+const cdiv = ([a, b], [c, d]) => {
+  const n = c * c + d * d;
+  return [(a * c + b * d) / n, (b * c - a * d) / n];
+};
+
+const AMP = { gm: 1.26e-3, RD: 4700, RL: 3300, RS: 500, CS: 100e-9 };
+
+function ampResponse(f) {
+  const { gm, RD, RL, RS, CS } = AMP;
+  const zs = cdiv([1, 0], [1 / RS, 2 * Math.PI * f * CS]);
+  const [re, im] = cdiv([-gm * (RD * RL) / (RD + RL), 0], [1 + gm * zs[0], gm * zs[1]]);
+  return { gain: Math.hypot(re, im), phase: Math.atan2(im, re) };
+}
+
+const IN_PROBE = 'Compuerta del JFET';
+
 const STAGE_VIEW = {
   ENTRADA: f => ({
     title: 'Señal de entrada',
     tunable: true,
     vdiv: 0.05, tdiv: TDIV[f],
-    channels: [{ name: 'CH1 · Entrada', probe: 'Salida del generador', color: COLOR_IN, amp: GEN_VP, f, phase: 0 }],
+    channels: [{ name: 'CH1 · Entrada', probe: IN_PROBE, color: COLOR_IN, amp: GEN_VP, f, phase: 0 }],
     note: 'Es la señal que entrega el generador. El amplificador la va a hacer más grande.',
   }),
+  SALIDA: f => {
+    const r = ampResponse(f);
+    const label = GEN_FREQS.find(s => s.f === f).label;
+    return {
+      title: 'Señal de salida',
+      tunable: true,
+      level: g => GEN_VP * ampResponse(g).gain,
+      vdiv: 0.1, tdiv: TDIV[f],
+      channels: [
+        { name: 'CH1 · Entrada', probe: IN_PROBE, color: COLOR_IN, amp: GEN_VP, f, phase: 0 },
+        { name: 'CH2 · Salida', probe: 'Resistencia de carga', color: COLOR_OUT, amp: GEN_VP * r.gain, f, phase: r.phase },
+      ],
+      note: [
+        { text: 'El JFET amplifica la señal y la invierte: cuando la entrada sube, la salida baja.' },
+        { title: `A ${label}`, text: `La salida es unas ${fmt(r.gain, 1)} veces más grande que la entrada.` },
+      ],
+    };
+  },
 };
 
 let svView = null;
