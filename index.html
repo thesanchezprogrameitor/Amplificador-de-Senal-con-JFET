@@ -1335,6 +1335,15 @@ addPart({ id: 'scope', tag: 'Medición', name: 'Osciloscopio',
   desc: 'Muestra la señal de entrada y la de salida.' },
   scope);
 
+addPart({ id: 'c1', tag: 'Entrada', name: 'C1 · Capacitor 10 µF', explode: 2.9,
+  desc: 'Deja pasar la señal y bloquea la corriente continua.',
+  tip: 'La franja con signos − marca la pata negativa.' },
+  buildElectrolytic('10µF', holePos(3, 'b'), holePos(6, 'b')));
+
+addPart({ id: 'w-in', tag: 'Entrada', name: 'Cable de señal',
+  desc: 'Pasa la señal al otro lado de la protoboard.' },
+  buildJumper(6, 'e', 6, 'f', 'red'));
+
 /* ===== Pantalla del osciloscopio ===== */
 
 const COLOR_IN = '#f5d742', COLOR_OUT = '#3fa9ff';
