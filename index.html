@@ -1437,6 +1437,10 @@ addPart({ id: 'rv1', tag: 'Ajuste', name: 'RV1 · Potenciómetro 1 kΩ', explode
   tip: 'El eje queda hacia afuera para poder girarlo.' },
   buildPot('B1K', 15, 'i'));
 
+addPart({ id: 'w-pot', tag: 'Ajuste', name: 'Puente del potenciómetro',
+  desc: 'Une la pata del centro con una lateral.' },
+  buildJumper(16, 'h', 17, 'h', 'red'));
+
 /* ===== Pantalla del osciloscopio ===== */
 
 const COLOR_IN = '#f5d742', COLOR_OUT = '#3fa9ff';
