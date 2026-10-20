@@ -64,7 +64,8 @@
   .sv-ch:focus-visible{outline:2px solid #3fa9ff;outline-offset:2px}
   .sv-ch-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
   .sv-ch-name{font:700 13.5px/1.2 "Segoe UI",system-ui,sans-serif}
-  .sv-ch-tog{font-size:11px;color:#8b93a0}
+  .sv-ch-tog{padding:3px 9px;border:1px solid #333944;border-radius:99px;background:#1b1f25;font-size:11px;font-weight:600;color:#c9cfd8}
+  .sv-ch:hover .sv-ch-tog{border-color:#4a515d;color:#f2f4f7}
   .sv-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
   .sv-cell{display:flex;flex-direction:column;gap:1px;padding:5px 8px;border-radius:6px;background:#0f1216}
   .sv-cell span{font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:#7f8794}
@@ -1196,7 +1197,7 @@ function buildFunctionGenerator() {
 
 /* ===== Osciloscopio ===== */
 
-const STAGES = ['ENTRADA', 'SALIDA', 'SIN C3'];
+const STAGES = ['CON C3', 'SIN C3'];
 
 function scopeJack(color) {
   const g = new THREE.Group();
@@ -1376,7 +1377,7 @@ function buildOscilloscope() {
   g.userData.buttons = [];
   STAGES.forEach((label, i) => {
     const b = scopeButton(label, 46);
-    b.position.set(CTRL_X + [0, -0.38, 0.38][i], cy - [0.22, 0.62, 0.62][i], D / 2 + 0.04);
+    b.position.set(CTRL_X + (i ? 0.38 : -0.38), cy - 0.22, D / 2 + 0.04);
     g.add(b);
     g.userData.buttons.push(b);
   });
@@ -1527,16 +1528,10 @@ const inputChannel = () => ({ name: 'CH1 · Entrada', probe: IN_PROBE, color: CO
 const outputChannel = r => ({ name: 'CH2 · Salida', probe: 'Resistencia de carga', color: COLOR_OUT, vdiv: 0.5, amp: GEN_VP * r.gain, f: GEN_F, phase: r.phase });
 
 const STAGE_VIEW = {
-  ENTRADA: () => ({
-    title: 'Señal de entrada',
-    tdiv: TDIV,
-    channels: [inputChannel()],
-    note: 'Es la señal que entrega el generador. El amplificador la va a hacer más grande.',
-  }),
-  SALIDA: () => {
+  'CON C3': () => {
     const r = ampResponse(true);
     return {
-      title: 'Señal de salida',
+      title: 'Entrada y salida con C3',
       tdiv: TDIV,
       channels: [inputChannel(), outputChannel(r)],
       note: [
@@ -1548,7 +1543,7 @@ const STAGE_VIEW = {
   'SIN C3': () => {
     const r = ampResponse(false), full = ampResponse(true);
     return {
-      title: 'Señal de salida sin C3',
+      title: 'Entrada y salida sin C3',
       tdiv: TDIV,
       channels: [inputChannel(), outputChannel(r)],
       note: [
