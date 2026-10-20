@@ -34,12 +34,7 @@
   .note-warn b{color:#b45309}
   .note-warn.pulse{animation:notePulse .45s ease 2}
   @keyframes notePulse{50%{transform:translateX(6px);box-shadow:0 0 0 3px rgba(245,158,11,.4)}}
-  .note-dc > b{color:#2563eb}
-  .dc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}
-  .dc-cell{display:flex;flex-direction:column;gap:1px;padding:5px 8px;border-radius:7px;background:#f2f5f9}
-  .dc-cell span{font-size:11.5px;color:#667085}
-  .dc-cell b{font:700 14px/1.25 Consolas,"Courier New",monospace;color:#14171f;white-space:nowrap}
-  @media (max-width:520px){#notes{left:10px;bottom:10px}.note{font-size:12.5px;padding:8px 11px}.dc-cell{padding:4px 6px}.dc-cell b{font-size:12.5px}}
+  @media (max-width:520px){#notes{left:10px;bottom:10px}.note{font-size:12.5px;padding:8px 11px}}
 
   #scopeView{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;background:#0d0f12;color:#e6e9ee;animation:svIn .18s ease-out}
   @keyframes svIn{from{opacity:0;transform:scale(.985)}to{opacity:1;transform:none}}
@@ -104,15 +99,6 @@
 </aside>
 
 <div id="notes" aria-live="polite">
-  <div class="note note-dc" id="noteDC" hidden>
-    <b>Medidas en el simulador</b>
-    <div class="dc-grid">
-      <div class="dc-cell"><span>V<sub>GS</sub></span><b>−0,61 V</b></div>
-      <div class="dc-cell"><span>V<sub>DS</sub></span><b>12,20 V</b></div>
-      <div class="dc-cell"><span>V<sub>GD</sub></span><b>−12,80 V</b></div>
-      <div class="dc-cell"><span>I<sub>D</sub></span><b>1,50 mA</b></div>
-    </div>
-  </div>
   <div class="note note-info"><b>Nota:</b> Presiona un botón del osciloscopio para ver la señal.</div>
   <div class="note note-warn" id="noteOff"><b>Circuito apagado.</b> No olvides prenderlo con el botón OFF de la fuente.</div>
 </div>
@@ -1513,6 +1499,8 @@ const cdiv = ([a, b], [c, d]) => {
   return [(a * c + b * d) / n, (b * c - a * d) / n];
 };
 
+const DC_POINT = [['VGS', '−0,61 V'], ['VDS', '12,20 V'], ['VGD', '−12,80 V'], ['ID', '1,50 mA']];
+
 const AMP = { gm: 7.8e-3, RD: 4700, RL: 3300, RS: 500, CS: 100e-9 };
 
 function ampResponse(bypass) {
@@ -1643,6 +1631,17 @@ function buildSide(view) {
     card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
     sv.side.append(card);
   });
+
+  const dc = el('div', 'sv-card');
+  dc.append(el('h2', '', 'Punto de operación'));
+  const dcGrid = el('div', 'sv-grid');
+  DC_POINT.forEach(([k, v]) => {
+    const cell = el('div', 'sv-cell');
+    cell.append(el('span', '', k), el('b', '', v));
+    dcGrid.append(cell);
+  });
+  dc.append(dcGrid);
+  sv.side.append(dc);
 
   const note = el('div', 'sv-card');
   note.append(el('h2', '', 'Qué está pasando'));
@@ -1842,13 +1841,13 @@ sv.close.addEventListener('click', closeScope);
 
 let powered = false;
 const noteOff = document.getElementById('noteOff');
-const noteDC = document.getElementById('noteDC');
+
 
 function setPower(on) {
   powered = on;
   supply.userData.setPower(on);
   noteOff.hidden = on;
-  noteDC.hidden = !on;
+
   needsRender = true;
 }
 
